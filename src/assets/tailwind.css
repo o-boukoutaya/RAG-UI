@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -----------------------------------------------------------------
+   Palette maison    (aucune modif du fichier JS nécessaire)
+   -----------------------------------------------------------------*/
+@layer utilities {
+  /* Couleurs de fond */
+  .bg-surface { background-color:#131619; }
+  /* .bg-layer   { background-color:#1d2126; } */
+  .bg-layer   { background-color:#1d2126; }
+  .bg-stroke\/70 { background-color:rgba(49,56,63,0.7); } /* 70% */
+
+  /* Traits / bordures */
+  .border-stroke { border-color:#31383f; }
+
+  /* Teintes texte */
+  .text-accent   { color:#10b981; }
+  .bg-accent     { background-color:#10b981; }
+
+  /* Exemples de raccourcis */
+  .item { @apply background-color:#1d2126; }
+  .card  { @apply bg-layer border border-stroke/60 rounded-md; }
+  /* .card { @apply bg-[#202329] border border-[#30363d] rounded-md; } */
+  .btn   { @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors; }
+  .btn-primary { @apply btn bg-[#3b82f6] text-white hover:bg-[#3b82f6]/80; }
+  .scroll-y { @apply overflow-y-auto; }
+}
+
+/* Scrollbar minimal */
+.scroll-y::-webkit-scrollbar{width:6px;}
+.scroll-y::-webkit-scrollbar-thumb{background:#40464d;border-radius:3px;}
