@@ -1,0 +1,6 @@
+--- a/src/api/index.js+++ b/src/api/index.js@@ -1,5 +1,5 @@ // src/api/index.js
+-import { http } from '@/lib/http';
++import { httpAxios as http } from '@/lib/http-axios';
+ 
+ export const API = {
+   health: {

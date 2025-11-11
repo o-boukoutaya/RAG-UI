@@ -1,7 +1,7 @@
 <script setup>
 // import { RouterLink, RouterView } from 'vue-router'
 import { computed, watchEffect } from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
+// import HelloWorld from './components/HelloWorld.vue'
 import { useThemeStore } from '@/stores/themeStore'
 
 // Composants structurels
@@ -22,7 +22,6 @@ watchEffect(() => {
 })
 // Classe utilitaire appliquée au conteneur racine
 const rootThemeClass = computed(() => (themeStore.dark ? 'dark' : 'light'))
-
 </script>
 
 <template>
@@ -49,6 +48,4 @@ const rootThemeClass = computed(() => (themeStore.dark ? 'dark' : 'light'))
   <!-- <RouterView /> -->
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

@@ -1,61 +1,58 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 
-/* Props / Emits */
 const props = defineProps({
-  tabs:       { type: Array,  required: true },   // [{ id:'files', label:'Files' }, …]
-  modelValue: { type: String, required: true }    // id actif
+  tabs: { type: Array, required: true }, // [{ id:'files', label:'Files' }, { id:'vectors', label:'Vector stores' }]
+  modelValue: { type: String, required: true },
 })
 const emit = defineEmits(['update:modelValue'])
 
-/* Index actif pour déplacer la pastille */
-const activeIdx = computed(() =>
-  props.tabs.findIndex(t => t.id === props.modelValue)
-)
+const activeIdx = computed(() => props.tabs.findIndex((t) => t.id === props.modelValue))
+const container = ref(null)
+const indicatorStyle = ref({ transform: 'translateX(0)', width: '0px' })
 
-/* Largeur d’un bouton (troisième ligne = measurement) */
-const pillWidth = ref(0)
-const container = ref()
-
+function syncIndicator() {
+  if (!container.value) return
+  const buttons = Array.from(container.value.querySelectorAll('button[data-tab]'))
+  const el = buttons[activeIdx.value]
+  if (!el) return
+  const { offsetLeft, offsetWidth } = el
+  indicatorStyle.value = { transform: `translateX(${offsetLeft}px)`, width: `${offsetWidth}px` }
+}
 onMounted(() => {
-  const firstBtn = container.value?.querySelector('button')
-  pillWidth.value = firstBtn ? firstBtn.getBoundingClientRect().width : 0
+  syncIndicator()
+})
+watchEffect(() => {
+  syncIndicator()
 })
 </script>
 
 <template>
-  <header class="flex items-center h-10 px-4 bg-layer border-b border-grey-200 dark:border-gray-700 pb-3">
-    <!-- Titre (slot optionnel) -->
-    <!-- <slot name="title">
-      <span class="text-sm font-medium">—</span>
-    </slot> -->
+  <header class="flex items-center gap-4">
+    <h1 class="text-xl font-semibold"><slot name="title">Ingestion</slot></h1>
 
-    <!-- ONGLET SLIDER : Background-black and border-radius -->
-     <div ref='container' class="relative inline-flex bg-black rounded-md p-0.5">
-      <!-- pastille -->
-      <span class="absolute top-0 left-0 h-6 bg-green-500 rounded-md m-1
-                  transition-transform duration-300 ease-in-out"
-            :style="{
-              width: pillWidth + 'px',
-              transform: `translateX(${activeIdx * pillWidth}px)`
-            }" />
-      <!-- pastille -->
-
-      <!-- boutons -->
-      <button v-for="t in props.tabs" :key="t.id"
-              class="relative z-10 px-4 py-1.5 text-xs font-medium rounded-full
-                     transition-colors duration-150"
-              :class="t.id===props.modelValue
-                        ? 'text-white font-bold'
-                        : 'text-gray-400 hover:text-white font-thin'"
-              @click="emit('update:modelValue', t.id)">
-        {{ t.label }}
-      </button>
+    <div ref="container" class="relative flex bg-gray-800 rounded-lg p-1 select-none">
+      <!-- sliding pill -->
+      <div
+        class="absolute top-1 bottom-1 rounded-md bg-gray-700 transition-all"
+        :style="indicatorStyle"
+      />
+      <div class="relative flex">
+        <button
+          v-for="t in tabs"
+          :key="t.id"
+          :data-tab="t.id"
+          class="px-3 py-1.5 rounded-md text-sm z-10"
+          :class="t.id === modelValue ? 'text-white font-medium' : 'text-gray-400 hover:text-white'"
+          @click="emit('update:modelValue', t.id)"
+        >
+          {{ t.label }}
+        </button>
+      </div>
     </div>
 
-    <!-- Actions facultatives -->
-    <div class="ml-auto flex gap-2">
-      <slot name="actions"/>
+    <div class="ml-auto flex items-center gap-2">
+      <slot name="actions" />
     </div>
   </header>
 </template>
