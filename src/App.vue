@@ -1,26 +1,20 @@
 <script setup>
 // import { RouterLink, RouterView } from 'vue-router'
 import { computed, watchEffect } from 'vue'
-// import HelloWorld from './components/HelloWorld.vue'
 import { useThemeStore } from '@/stores/themeStore'
 
 // Composants structurels
 import Sidebar from '@/components/Sidebar.vue'
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
+import ToastHost from '@/components/common/ToastHost.vue'
 
 const themeStore = useThemeStore()
-/*
- * Synchronise la préférence « dark » avec :
- *   1. Le localStorage pour la persistance (clé : theme)
- *   2. L'élément <html> pour activer le mode sombre Tailwind (strategy "class")
- */
 watchEffect(() => {
   const isDark = themeStore.dark
   document.documentElement.classList.toggle('dark', isDark)
   localStorage.setItem('theme', isDark ? 'dark' : 'light')
 })
-// Classe utilitaire appliquée au conteneur racine
 const rootThemeClass = computed(() => (themeStore.dark ? 'dark' : 'light'))
 </script>
 
@@ -39,6 +33,7 @@ const rootThemeClass = computed(() => (themeStore.dark ? 'dark' : 'light'))
       <main class="flex-1 flex flex-col p-6 overflow-auto bg-gray-900">
         <!-- Les pages peuvent elles‑mêmes gérer un layout 1/3‑2/3 via slots -->
         <router-view class="flex-1" />
+        <ToastHost />
       </main>
 
       <!-- Pied de page -->

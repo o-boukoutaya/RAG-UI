@@ -1,47 +1,64 @@
 <template>
-  <div class="p-4 space-y-4">
+  <div class="p-6 space-y-6">
     <h2 class="text-xl font-bold">Monitoring</h2>
 
-    <div v-if="net.last" class="p-3 rounded border">
-      <div class="font-semibold">Dernière requête</div>
-      <div>URL : {{ net.last.url }}</div>
-      <div>Statut : {{ net.last.status }}</div>
-      <div>Durée : {{ Math.round(net.last.ms) }} ms</div>
-      <div>X-Request-Id : {{ net.last.id }}</div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <MetricCard title="Phase" :value="status.snapshot?.phase || '—'"/>
+      <MetricCard title="Uptime" :value="uptime"/>
+      <MetricCard title="Neo4j" :value="status.snapshot?.neo4j?.connected ? 'connecté' : 'déconnecté'"/>
+      <MetricCard title="Boot ID" :value="(status.snapshot?.boot_id || '—').slice(0,8)"/>
     </div>
 
-    <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <div class="font-semibold">Logs (SSE)</div>
-        <button class="px-2 py-1 border rounded" @click="net.clearLogs()">Effacer</button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-semibold mb-2">Logs (SSE)</h3>
+        <LogViewer :lines="net.logs"/>
       </div>
-      <pre class="bg-black text-green-400 p-2 rounded h-[60vh] overflow-auto"
-        >{{ net.logs.join('\n') }}
-      </pre>
+      <div>
+        <h3 class="font-semibold mb-2">Timeline pipeline (démo)</h3>
+        <ProgressTimeline :steps="demoSteps"/>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue'
-import { useNetStore } from '@/stores/net'
+import { onMounted, onBeforeUnmount, computed, ref } from "vue";
+import { useNetStore } from "@/stores/net";
+import { useStatusStore } from "@/stores/status";
+import { useSSE } from "@/composables/useSSE";
+import MetricCard from "@/components/common/MetricCard.vue";
+import LogViewer from "@/components/common/LogViewer.vue";
+import ProgressTimeline from "@/components/common/ProgressTimeline.vue";
 
-const net = useNetStore()
+const net = useNetStore();
+const status = useStatusStore();
+const demoSteps = ref([
+  { name: 'Ingestion', active: false, done: false },
+  { name: 'Embedding', active: false, done: false },
+  { name: 'Indexation', active: false, done: false },
+  { name: 'Graph Build', active: false, done: false },
+  { name: 'Retrieval', active: false, done: false },
+]);
 
-let es = null
+const uptime = computed(() => status.uptimeText);
+
+let sse;
 onMounted(() => {
-  const base = import.meta.env.VITE_API_URL || 'http://localhost:8050'
-  es = new EventSource(`${base}/api/dev/logs/stream`)
-  es.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data)
-      net.addLog(data.message)
-    } catch (err) {
-      console.error('SSE parse error:', err)
-    }
-  }
-})
-onBeforeUnmount(() => {
-  if (es) es.close()
-})
+  sse = useSSE('/api/dev/logs/stream', {
+    onEvent: (ev, e) => {
+      if (ev === 'log') {
+        const data = JSON.parse(e.data);
+        net.addLog(data.message);
+      } else if (ev === 'status') {
+        const data = JSON.parse(e.data);
+        status.setConnected(true); status.setSnapshot(data);
+      } else if (ev === 'ping') {
+        status.setConnected(true);
+      }
+    },
+    onError: () => status.setConnected(false)
+  });
+});
+onBeforeUnmount(() => sse?.close());
 </script>

@@ -1,16 +1,18 @@
 // src/lib/http-axios.js
 import axios from 'axios'
 import { useNetStore } from '@/stores/net'
+import { useStatusStore } from "@/stores/status";
+import { useNotifyStore } from "@/stores/notify";
+// import { useSSE } from "@/composables/useSSE";
 
 export const httpAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8050',
   timeout: 30000,
 })
 
 // Intercepteur requête : ID + horodatage
 httpAxios.interceptors.request.use((config) => {
   config.metadata = { t0: performance.now() }
-  // Ajoute un X-Request-Id pour corrélation (si votre back ne le génère pas déjà)
   if (!config.headers) config.headers = {}
   if (!config.headers['X-Request-Id']) {
     config.headers['X-Request-Id'] = crypto.randomUUID()
@@ -41,6 +43,12 @@ httpAxios.interceptors.response.use(
       ms,
       id: err.response?.headers?.['x-request-id'] ?? cfg.headers?.['X-Request-Id'],
     })
+    if (err.response?.status === 503) {
+      status.setConnected(true);
+      const snap = { ...(status.snapshot||{}), phase: "STARTING" };
+      status.setSnapshot(snap);
+      notify.info("Backend en démarrage…");
+    }
     return Promise.reject(err)
   },
 )

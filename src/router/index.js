@@ -8,7 +8,7 @@ export const routes = [
   { path: '/kg',          component: () => import('@/pages/KnowledgeGraph.vue'),  meta: { title: 'Knowledge Graph' } },
   { path: '/search',      component: () => import('@/pages/Search.vue'),          meta: { title: 'Recherche' } },
   { path: '/monitoring',  component: () => import('@/pages/Monitoring.vue'),      meta: { title: 'Monitoring' } },
-  /* …autres routes… */
+  // { path: '/404',         component: () => import('@/pages/404.vue'),      meta: { title: '404 Not Found' } },
 ]
 
 const router = createRouter({
